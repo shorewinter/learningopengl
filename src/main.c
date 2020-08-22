@@ -7,19 +7,22 @@
 const char *vertexShaderSource = 
 	"#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
+	"layout (location = 1) in vec3 aColor;\n"
+	"out vec3 ourColor;\n"
 	"void main()\n"
 	"{\n"
 	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+	"	ourColor = aColor;\n"
 	"}\0";
 
 /* fragment shader */
 const char *fragmentShaderSource = 
 	"#version 330 core\n"
 	"out vec4 FragColor;\n"
-	"uniform vec4 ourColor;\n"
+	"in vec3 ourColor;\n"
 	"void main()\n"
 	"{\n"
-	"	FragColor = ourColor;\n"
+	"	FragColor = vec4(ourColor, 1.0);\n"
 	"}\0";
 
 /* user input */
@@ -98,9 +101,10 @@ int main(void) {
 
 	/* triangle */
 	float vertices[] = {
-		-0.5, -0.5, 0.0,
-		 0.5, -0.5, 0.0,
-		 0.0,  0.5, 0.0
+		/* postitions */ /* colors */   
+		 0.5, -0.5, 0.0, 0.0, 1.0, 0.0, /* bottom right */
+		-0.5, -0.5, 0.0, 1.0, 0.0, 0.0, /* bottom left */
+		 0.0,  0.5, 0.0, 0.0, 0.0, 1.0  /* top */
 	};
 
 	unsigned int indicies[] = {
@@ -125,15 +129,23 @@ int main(void) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
 
-	/* vertex attributes */
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-	glEnableVertexAttribArray(0);
+	/* position attributes */
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+	glEnableVertexAttribArray(0);	
+
+	/* color attributes */
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	
 	/* render loop */
     while (!glfwWindowShouldClose(window)) {
+		/* input */
 		process_input(window);
-    	glClearColor(0.1, 0.3, 0.3, 1.0);
+
+		/* clear color buffer */
+    	glClearColor(0.9, 0.9, 0.9, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
+
 		glUseProgram(shaderProgram);
 		
 		/* update unifrom color */
@@ -149,6 +161,7 @@ int main(void) {
 		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		// glBindVertexArray(0);	
 
+		/* swap buffers and poll IO events */
 		glfwSwapBuffers(window);
         glfwPollEvents();
     }
